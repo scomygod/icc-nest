@@ -1,6 +1,14 @@
+import { IsNotEmpty, IsNumber, Min } from 'class-validator';
+
 export class UpdateProductDto {
-    name?: string;        // El ? significa que puede venir o no
-    description?: string;
-    price?: number;
-    stock?: number;
+  @IsNotEmpty({ message: 'El nombre es obligatorio' })
+  name: string;
+
+  @IsNumber({}, { message: 'El precio debe ser numérico' })
+  @Min(0, { message: 'El precio no puede ser negativo' })
+  price: number;
+
+  @IsNumber({}, { message: 'El stock debe ser numérico' })
+  @Min(0, { message: 'El stock no puede ser negativo' })
+  stock: number;
 }

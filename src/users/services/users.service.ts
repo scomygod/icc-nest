@@ -1,55 +1,91 @@
 import { Injectable } from '@nestjs/common';
-import { UserMapper } from '../mappers/user.mapper';
-import { UpdateUserDto } from '../dtos/create-user.dto/update-user.dto';
-import { CreateUserDto } from '../dtos/create-user.dto/create-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { UserEntity } from '../entities/user.entity/user.entity';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { PartialUpdateUserDto } from '../dtos/partial-update-user.dto';
+import { UserResponseDto } from '../dtos/user-response.dto';
+import { User } from '../models/user.model';
+
+import { NotFoundException } from '../../exceptions/domain/not-found.exception';
+import { ConflictException } from '../../exceptions/domain/conflict.exception';
 
 @Injectable()
 export class UsersService {
-  private users: UserEntity[] = [];
-  private currentId = 1;
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
 
-  findAll() {
-    return this.users.map(u => UserMapper.toResponse(u));
+  async findAll(): Promise<UserResponseDto[]> {
+    const entities = await this.userRepository.find();
+
+    return entities.map((entity) => User.fromEntity(entity).toResponseDto());
   }
 
-  findOne(id: number) {
-    const user = this.users.find(u => u.id === id);
-    if (!user) return { error: 'User not found' };
-    return UserMapper.toResponse(user);
+  async findOne(id: number): Promise<UserResponseDto> {
+    const entity = await this.userRepository.findOneBy({ id });
+
+    if (!entity) {
+      throw new NotFoundException(`Usuario no encontrado con ID: ${id}`);
+    }
+
+    return User.fromEntity(entity).toResponseDto();
   }
 
-  create(dto: CreateUserDto) {
-    const entity = UserMapper.toEntity(this.currentId++, dto);
-    this.users.push(entity);
-    return UserMapper.toResponse(entity);
+  async create(dto: CreateUserDto): Promise<UserResponseDto> {
+    const exists = await this.userRepository.exist({
+      where: { email: dto.email },
+    });
+
+    if (exists) {
+      throw new ConflictException(`El email ${dto.email} ya está registrado`);
+    }
+
+    const user = User.fromDto(dto);
+    const saved = await this.userRepository.save(user.toEntity());
+
+    return User.fromEntity(saved).toResponseDto();
   }
 
-  update(id: number, dto: UpdateUserDto) {
-    const user = this.users.find(u => u.id === id);
-    if (!user) return { error: 'User not found' };
+  async update(id: number, dto: UpdateUserDto): Promise<UserResponseDto> {
+    const entity = await this.userRepository.findOneBy({ id });
 
-    user.name = dto.name;
-    user.email = dto.email;
+    if (!entity) {
+      throw new NotFoundException(`Usuario no encontrado con ID: ${id}`);
+    }
 
-    return UserMapper.toResponse(user);
+    const user = User.fromEntity(entity);
+    user.update(dto);
+
+    const saved = await this.userRepository.save(user.toEntity());
+    return User.fromEntity(saved).toResponseDto();
   }
 
-  partialUpdate(id: number, dto: UpdateUserDto) {
-    const user = this.users.find(u => u.id === id);
-    if (!user) return { error: 'User not found' };
+  async partialUpdate(
+    id: number,
+    dto: PartialUpdateUserDto,
+  ): Promise<UserResponseDto> {
+    const entity = await this.userRepository.findOneBy({ id });
 
-    if (dto.name !== undefined) user.name = dto.name;
-    if (dto.email !== undefined) user.email = dto.email;
+    if (!entity) {
+      throw new NotFoundException(`Usuario no encontrado con ID: ${id}`);
+    }
 
-    return UserMapper.toResponse(user);
+    const user = User.fromEntity(entity);
+    user.partialUpdate(dto);
+
+    const saved = await this.userRepository.save(user.toEntity());
+    return User.fromEntity(saved).toResponseDto();
   }
 
-  delete(id: number) {
-    const exists = this.users.some(u => u.id === id);
-    if (!exists) return { error: 'User not found' };
+  async delete(id: number): Promise<void> {
+    const result = await this.userRepository.delete(id);
 
-    this.users = this.users.filter(u => u.id !== id);
-    return { message: 'Deleted successfully' };
+    if (result.affected === 0) {
+      throw new NotFoundException(`Usuario no encontrado con ID: ${id}`);
+    }
   }
 }

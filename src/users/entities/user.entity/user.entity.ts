@@ -1,20 +1,24 @@
-export class UserEntity {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  createdAt: Date;
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-  constructor(
-    id: number,
-    name: string,
-    email: string,
-    password: string,
-  ) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.password = password;
-    this.createdAt = new Date();
-  }
+@Entity('users')
+export class UserEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ length: 150, nullable: false })
+  name: string;
+
+  @Column({ length: 150, nullable: false, unique: true })
+  email: string;
+
+  @Column({ length: 255, nullable: false })
+  password: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

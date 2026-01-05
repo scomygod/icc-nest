@@ -1,9 +1,25 @@
-import { UserEntity } from "../entities/user.entity/user.entity";
+import { UserEntity } from '../entities/user.entity/user.entity';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 
 export class UserMapper {
+  // Para crear un usuario
+  static fromCreateDto(dto: CreateUserDto): UserEntity {
+    const entity = new UserEntity();
+    entity.name = dto.name;
+    entity.email = dto.email;
+    entity.password = dto.password;
+    return entity;
+  }
 
-  static toEntity(id: number, dto: any): UserEntity {
-    return new UserEntity(id, dto.name, dto.email, dto.password);
+  // Para actualizar un usuario
+  static fromUpdateDto(id: number, dto: UpdateUserDto): UserEntity {
+    const entity = new UserEntity();
+    entity.id = id;
+    entity.name = dto.name;
+    entity.email = dto.email;
+    entity.password = dto.password;
+    return entity;
   }
 
   static toResponse(entity: UserEntity) {
@@ -14,4 +30,3 @@ export class UserMapper {
     };
   }
 }
-

@@ -1,28 +1,23 @@
-import { CreateProductDto } from '../dtos/create-product.dto';
 import { ProductEntity } from '../entities/product.entity';
+import { CreateProductDto } from '../dtos/create-product.dto';
+import { UpdateProductDto } from '../dtos/update-product.dto';
 
 export class ProductMapper {
-    
-    // Convierte los datos de entrada + el ID generado en una Entidad completa
-    static toEntity(id: number, dto: CreateProductDto): ProductEntity {
-        return {
-            id: id,
-            name: dto.name,
-            description: dto.description,
-            price: dto.price,
-            stock: dto.stock
-        };
-    }
+  static fromCreateDto(dto: CreateProductDto): ProductEntity {
+    const entity = new ProductEntity();
+    entity.name = dto.name;
+    entity.price = dto.price;
+    entity.stock = dto.stock;
+    return entity;
+  }
 
-    // Convierte la entidad interna en lo que quieres mostrar al usuario
-    // (A veces quieres ocultar campos internos, aquí es donde filtrarías)
-    static toResponse(entity: ProductEntity) {
-        return {
-            id: entity.id,
-            name: entity.name,
-            description: entity.description,
-            price: entity.price,
-            stock: entity.stock
-        };
-    }
+  static fromUpdateDto(
+    entity: ProductEntity,
+    dto: UpdateProductDto,
+  ): ProductEntity {
+    entity.name = dto.name;
+    entity.price = dto.price;
+    entity.stock = dto.stock;
+    return entity;
+  }
 }

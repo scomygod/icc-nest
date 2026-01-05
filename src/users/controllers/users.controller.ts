@@ -3,16 +3,13 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
-  NotFoundException,
   Param,
   Patch,
   Post,
   Put,
 } from '@nestjs/common';
-import { CreateUserDto } from '../dtos/create-user.dto/create-user.dto';
-import { UpdateUserDto } from '../dtos/create-user.dto/update-user.dto';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 import { UsersService } from '../services/users.service';
 
 @Controller('users')
